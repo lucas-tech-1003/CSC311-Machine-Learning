@@ -4,11 +4,9 @@ from six import StringIO
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
-from sklearn import metrics
+from sklearn import metrics, tree
 
-from IPython.display import Image
-from sklearn.tree import export_graphviz
-import pydotplus
+import numpy as np
 
 import matplotlib.pyplot as plt
 
@@ -40,15 +38,18 @@ def load_data(real: str, fake: str):
     full_dataset = real_dataset
     full_dataset.extend(fake_dataset)
 
-    print(len(full_dataset))
-    print(len(labels))
-
     x_train, x_test, y_train, y_test = train_test_split(
         full_dataset,
         labels,
         train_size=0.7,
         test_size=0.3,
         random_state=42)
+    train_data = x_train.copy()
+    train_label = y_train.copy()
+
+    # print(train_label.count(0))
+    # print(train_label.count(1))
+
     # print(len(x_train))
     # print(len(x_test))
     x_valid, x_test, y_valid, y_test = \
@@ -66,7 +67,8 @@ def load_data(real: str, fake: str):
 
     return x_train, y_train, \
            x_test, y_test, \
-           x_valid, y_valid, vectorizer.get_feature_names_out()
+           x_valid, y_valid, vectorizer.get_feature_names_out(), \
+           train_data, train_label
 
 
 def select_model(x_train, y_train, x_valid, y_valid, depth: List[int]):
@@ -106,10 +108,57 @@ def select_model(x_train, y_train, x_valid, y_valid, depth: List[int]):
     return gini_accuracy
 
 
+def compute_information_gain(data, labels, split):
+    """computes the information gain of a split on the training data
+
+    """
+    len_data = len(data)
+    num_fake = labels.count('0')
+    num_real = labels.count('1')
+    fake_prob = num_fake / len_data
+    real_prob = num_real / len_data
+    entropy = -(fake_prob * np.log2(fake_prob) + real_prob * np.log2(real_prob))
+
+    vectorizer = CountVectorizer()
+    data = vectorizer.fit_transform(data)
+    features = vectorizer.get_feature_names_out()
+    feature_index = list(features).index(split)
+    print(features)
+    print(feature_index)
+    print(list(data.toarray())[0])
+    left_fake = 0
+    left_real = 0
+    right_fake = 0
+    right_real = 0
+    for i in range(len(data.toarray()), num_real):
+        if data.toarray()[i][feature_index] <= 0.5:
+            left_real += 1
+        else:
+            right_real += 1
+    for i in range(len(data.toarray()), num_real):
+        if data.toarray()[i][feature_index] <= 0.5:
+            left_fake += 1
+        else:
+            right_fake += 1
+    left_prob = (left_real + left_fake) / len_data
+    right_prob = (right_real + right_fake) / len_data
+    left_fake_prob = left_fake / (left_real + left_fake)
+    left_real_prob = left_real / (left_real + left_fake)
+    right_fake_prob = right_fake / (right_real + right_fake)
+    right_real_prob = right_real / (right_real + right_fake)
+    cond_entropy = - left_prob * (left_real_prob * np.log2(left_real_prob) +
+                                  left_fake_prob * np.log2(left_fake_prob)) \
+                   - right_prob * (right_real_prob * np.log2(right_real_prob) +
+                                   right_fake_prob * np.log2(right_fake_prob))
+
+    return entropy - cond_entropy
+
+
 if __name__ == "__main__":
     max_depths = [4, 8, 12, 16, 25, 32, 64, 100]
 
-    train, train_label, test, test_label, valid, valid_label, feature_names = \
+    train, train_label, test, test_label, valid, valid_label, feature_names, \
+    train_data_raw, train_label_raw = \
         load_data("clean_real.txt", "clean_fake.txt")
 
     accuracy = select_model(train, train_label, valid, valid_label, max_depths)
@@ -121,16 +170,17 @@ if __name__ == "__main__":
 
     plt.show()
 
+    print(compute_information_gain(train_data_raw, train_label_raw, "the"))
+
     # Visualize the DecisionTreeClassifier with criteria: Gini Coefficient and
     # depth: 64
 
-    gini_model = DecisionTreeClassifier(max_depth=64)
-    gini_model = gini_model.fit(train, train_label)
-    dot_data = StringIO()
-    export_graphviz(gini_model, out_file=dot_data,
-                    filled=True, rounded=True,
-                    special_characters=True, feature_names=feature_names,
-                    class_names=['0', '1'])
-    graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
-    graph.write_png('decision_tree.png')
-    Image(graph.create_png())
+    # gini_model = DecisionTreeClassifier(max_depth=64)
+    # gini_model = gini_model.fit(train, train_label)
+    #
+    # fig = plt.figure(figsize=(25,20))
+    # _ = tree.plot_tree(gini_model,
+    #                    feature_names=feature_names,
+    #                    class_names=['fake', 'real'],
+    #                    filled=True)
+    # fig.savefig("decision_tree.png")
