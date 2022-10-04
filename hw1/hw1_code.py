@@ -137,16 +137,17 @@ def compute_information_gain(data, labels, split):
     left_real = 0
     right_fake = 0
     right_real = 0
-    for i in range(num_real):
-        if data.toarray()[i][feature_index] <= 0.5:
-            left_real += 1
+    for i in range(len_data):
+        if labels[i] == 0:
+            if data.toarray()[i][feature_index] <= 0.5:
+                left_fake += 1
+            else:
+                right_fake += 1
         else:
-            right_real += 1
-    for i in range(num_real, len_data):
-        if data.toarray()[i][feature_index] <= 0.5:
-            left_fake += 1
-        else:
-            right_fake += 1
+            if data.toarray()[i][feature_index] <= 0.5:
+                left_real += 1
+            else:
+                right_real += 1
     # print(left_real + left_fake)
     # print(right_real + right_fake)
     left_prob = (left_real + left_fake) / len_data
