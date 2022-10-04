@@ -79,6 +79,8 @@ def select_model(x_train, y_train, x_valid, y_valid, depth: List[int]):
 
     """
     gini_accuracy = []
+    entropy_accuracy = []
+    log_accuracy = []
     for max_d in depth:
         # Create DecisionTreeClassifier with criterion info gain, log loss
         # and Gini
@@ -104,8 +106,10 @@ def select_model(x_train, y_train, x_valid, y_valid, depth: List[int]):
               f'max_depth={max_d}: {metrics.accuracy_score(y_valid, pred_gini)}'
               )
         gini_accuracy.append(metrics.accuracy_score(y_valid, pred_gini))
+        entropy_accuracy.append(metrics.accuracy_score(y_valid, pred_ig))
+        log_accuracy.append(metrics.accuracy_score(y_valid, pred_log))
 
-    return gini_accuracy
+    return gini_accuracy, entropy_accuracy, log_accuracy
 
 
 def compute_information_gain(data, labels, split):
@@ -113,8 +117,11 @@ def compute_information_gain(data, labels, split):
 
     """
     len_data = len(data)
-    num_fake = labels.count('0')
-    num_real = labels.count('1')
+    num_fake = labels.count(0)
+    num_real = labels.count(1)
+    # print(len_data)
+    # print(num_fake)
+    # print(num_real)
     fake_prob = num_fake / len_data
     real_prob = num_real / len_data
     entropy = -(fake_prob * np.log2(fake_prob) + real_prob * np.log2(real_prob))
@@ -123,23 +130,25 @@ def compute_information_gain(data, labels, split):
     data = vectorizer.fit_transform(data)
     features = vectorizer.get_feature_names_out()
     feature_index = list(features).index(split)
-    print(features)
-    print(feature_index)
-    print(list(data.toarray())[0])
+    # print(features)
+    # print(feature_index)
+    # print(list(data.toarray())[0])
     left_fake = 0
     left_real = 0
     right_fake = 0
     right_real = 0
-    for i in range(len(data.toarray()), num_real):
+    for i in range(num_real):
         if data.toarray()[i][feature_index] <= 0.5:
             left_real += 1
         else:
             right_real += 1
-    for i in range(len(data.toarray()), num_real):
+    for i in range(num_real, len_data):
         if data.toarray()[i][feature_index] <= 0.5:
             left_fake += 1
         else:
             right_fake += 1
+    # print(left_real + left_fake)
+    # print(right_real + right_fake)
     left_prob = (left_real + left_fake) / len_data
     right_prob = (right_real + right_fake) / len_data
     left_fake_prob = left_fake / (left_real + left_fake)
@@ -161,26 +170,41 @@ if __name__ == "__main__":
     train_data_raw, train_label_raw = \
         load_data("clean_real.txt", "clean_fake.txt")
 
-    accuracy = select_model(train, train_label, valid, valid_label, max_depths)
+    gini_accuracy, info_accuracy, log_accuracy = \
+        select_model(train, train_label, valid, valid_label, max_depths)
+
 
     plt.xlabel("max_depth")
     plt.ylabel("validation accuracy")
-    plt.title("Criteria: Gini Coefficient")
-    plt.plot(max_depths, accuracy)
+    plt.title("Depth vs Accuracy")
 
+    plt.plot(max_depths, gini_accuracy, "o-r", label="gini")
+    plt.plot(max_depths, info_accuracy, "o-b", label="entropy")
+    plt.plot(max_depths, log_accuracy, "o-g", label="log_loss")
+    plt.legend(title="Split Criterion")
     plt.show()
 
-    print(compute_information_gain(train_data_raw, train_label_raw, "the"))
 
     # Visualize the DecisionTreeClassifier with criteria: Gini Coefficient and
     # depth: 64
 
-    # gini_model = DecisionTreeClassifier(max_depth=64)
-    # gini_model = gini_model.fit(train, train_label)
-    #
-    # fig = plt.figure(figsize=(25,20))
-    # _ = tree.plot_tree(gini_model,
-    #                    feature_names=feature_names,
-    #                    class_names=['fake', 'real'],
-    #                    filled=True)
-    # fig.savefig("decision_tree.png")
+    gini_model = DecisionTreeClassifier(max_depth=4)
+    gini_model = gini_model.fit(train, train_label)
+
+    fig = plt.figure(figsize=(25, 20))
+    _ = tree.plot_tree(gini_model,
+                       feature_names=feature_names,
+                       class_names=['fake', 'real'],
+                       filled=True)
+    fig.savefig("decision_tree.png")
+
+    print(f'The information gain for feature "the" is '
+          f'{compute_information_gain(train_data_raw, train_label_raw, "the")}')
+    print(f'The information gain for feature "hillary" is '
+          f'{compute_information_gain(train_data_raw, train_label_raw, "hillary")}')
+    print(f'The information gain for feature "donald" is '
+          f'{compute_information_gain(train_data_raw, train_label_raw, "donald")}')
+    print(f'The information gain for feature "trumps" is '
+          f'{compute_information_gain(train_data_raw, train_label_raw, "trumps")}')
+    print(f'The information gain for feature "clinton" is '
+          f'{compute_information_gain(train_data_raw, train_label_raw, "clinton")}')
