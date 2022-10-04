@@ -188,7 +188,7 @@ if __name__ == "__main__":
     # Visualize the DecisionTreeClassifier with criteria: Gini Coefficient and
     # depth: 64
 
-    gini_model = DecisionTreeClassifier(max_depth=4)
+    gini_model = DecisionTreeClassifier(max_depth=64)
     gini_model = gini_model.fit(train, train_label)
 
     fig = plt.figure(figsize=(25, 20))
