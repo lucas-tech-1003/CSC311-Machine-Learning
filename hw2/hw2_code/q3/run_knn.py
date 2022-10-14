@@ -42,15 +42,21 @@ def run_knn():
     valid_inputs, valid_targets = load_valid()
     test_inputs, test_targets = load_test()
 
-    #####################################################################
-    # TODO:                                                             #
-    # Implement a function that runs kNN for different values of k,     #
-    # plots the classification rate on the validation set, and etc.     #
-    #####################################################################
+    k_arr = np.arange(1, 10, 2)  # array [1, 3, 5, 7, 9]
+    accuracy = []
 
-    #####################################################################
-    #                       END OF YOUR CODE                            #
-    #####################################################################
+    for k in k_arr:
+        valid_labels = knn(k, train_inputs, train_targets, valid_inputs)
+        num_correct = np.count_nonzero(valid_targets - valid_labels == 0)
+        accuracy.append(num_correct / len(valid_labels))
+        print(f'correct: {num_correct} total: {len(valid_labels)} accuracy: {num_correct / len(valid_labels)}')
+
+    # Plot the classification accuracy on the validation set
+    plt.xlabel("k")
+    plt.ylabel("Accuracy")
+    plt.title("K v.s. Classification Accuracy")
+    plt.plot(k_arr, accuracy)
+    plt.show()
 
 
 if __name__ == "__main__":
