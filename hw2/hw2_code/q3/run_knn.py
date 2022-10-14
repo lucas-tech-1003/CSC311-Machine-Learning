@@ -59,5 +59,40 @@ def run_knn():
     plt.show()
 
 
+def run_knn_kstar(k_star):
+    train_inputs, train_targets = load_train()
+    valid_inputs, valid_targets = load_valid()
+    test_inputs, test_targets = load_test()
+
+    if k_star <= 2:
+        k_arr = np.array([k_star, k_star+2])
+    else:
+        k_arr = np.array([k_star -2, k_star, k_star+2])
+    validation_accuracy = []
+    test_accuracy = []
+    for k in k_arr:
+        valid_labels = knn(k, train_inputs, train_targets, valid_inputs)
+        test_labels = knn(k, train_inputs, train_targets, test_inputs)
+        valid_correct = np.count_nonzero(valid_targets - valid_labels == 0)
+        validation_accuracy.append(valid_correct / len(valid_labels))
+        test_correct = np.count_nonzero(test_targets - test_labels == 0)
+        test_accuracy.append(test_correct / len(test_labels))
+
+    # Plot the classification accuracy on the validation set
+
+    plt.xlabel("k")
+    plt.ylabel("Accuracy")
+    plt.title("K v.s. Validation Accuracy")
+    plt.plot(k_arr, validation_accuracy, label="validation")
+
+    plt.xlabel("k")
+    plt.ylabel("Accuracy")
+    plt.title("K v.s. Test Accuracy")
+    plt.plot(k_arr, test_accuracy, 'r', label= "test")
+    plt.legend()
+    plt.show()
+
+
 if __name__ == "__main__":
     run_knn()
+    # run_knn_kstar(5)
