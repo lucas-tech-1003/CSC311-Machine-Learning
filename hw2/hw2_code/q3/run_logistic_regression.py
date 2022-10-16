@@ -10,36 +10,56 @@ def run_logistic_regression():
     train_inputs, train_targets = load_train()
     # train_inputs, train_targets = load_train_small()
     valid_inputs, valid_targets = load_valid()
+    test_inputs, test_targets = load_test()
 
-    N, M = train_inputs.shape
+    # N, M = train_inputs.shape
+    N, M = valid_inputs.shape
 
     #####################################################################
-    # TODO:                                                             #
     # Set the hyperparameters for the learning rate, the number         #
     # of iterations, and the way in which you initialize the weights.   #
     #####################################################################
     hyperparameters = {
-        "learning_rate": None,
+        "learning_rate": 0.01,
         "weight_regularization": 0.,
-        "num_iterations": None
+        "num_iterations": 1000
     }
-    weights = None
+    print(hyperparameters)
+    weights = np.zeros(M + 1, dtype=np.float64).reshape(-1, 1)
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
 
     # Verify that your logistic function produces the right gradient.
     # diff should be very close to 0.
-    run_check_grad(hyperparameters)
+    # run_check_grad(hyperparameters)
 
     # Begin learning with gradient descent
     #####################################################################
-    # TODO:                                                             #
     # Modify this section to perform gradient descent, create plots,    #
     # and compute test error.                                           #
     #####################################################################
+    # for t in range(hyperparameters["num_iterations"]):
+    #     f, df, y = logistic(weights, train_inputs, train_targets,
+    #                         hyperparameters)
+    #     weights -= hyperparameters["learning_rate"] * df
+    # print(f'Training\nFinal Cross entropy: {evaluate(train_targets, y)[0]} '
+    #       f'\nClassification Accuracy: {evaluate(train_targets, y)[1]}')
+
     for t in range(hyperparameters["num_iterations"]):
-        pass
+        f, df, y = logistic(weights, valid_inputs, valid_targets,
+                            hyperparameters)
+        weights -= hyperparameters["learning_rate"] * df
+    print(f'Validation\nFinal Cross entropy: {evaluate(valid_targets, y)[0]} '
+          f'\nClassification Accuracy: {evaluate(valid_targets, y)[1]}')
+
+    # for t in range(hyperparameters["num_iterations"]):
+    #     f, df, y = logistic(weights, test_inputs, test_targets,
+    #                         hyperparameters)
+    #     weights -= hyperparameters["learning_rate"] * df
+    # print(f'Test\nFinal Cross entropy: {evaluate(test_targets, y)[0]} '
+    #       f'\nClassification Accuracy: {evaluate(test_targets, y)[1]}')
+
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################

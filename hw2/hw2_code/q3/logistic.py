@@ -17,11 +17,13 @@ def logistic_predict(weights, data):
     to the classifier.
     """
     #####################################################################
-    # TODO:                                                             #
     # Given the weights and bias, compute the probabilities predicted   #
     # by the logistic classifier.                                       #
     #####################################################################
-    y = None
+    # append a column vector of 1 to data's last column
+    data = np.insert(data, len(data[0]), 1, axis=1)
+    z = np.matmul(data, weights)
+    y = sigmoid(z).reshape(-1, 1)
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
@@ -42,13 +44,18 @@ def evaluate(targets, y):
         frac_correct: (float) Fraction of inputs classified correctly
     """
     #####################################################################
-    # TODO:                                                             #
     # Given targets and probabilities predicted by the classifier,      #
     # return cross entropy and the fraction of inputs classified        #
     # correctly.                                                        #
     #####################################################################
-    ce = None
-    frac_correct = None
+    ce = (-targets * np.log(y) - (1 - targets) * np.log(1 - y)).mean()
+    x = y.copy()
+    for i in range(len(x)):
+        if x[i] >= 0.5:
+            x[i] = 1
+        else:
+            x[i] = 0
+    frac_correct = np.count_nonzero(targets - x == 0) / len(targets)
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
@@ -78,13 +85,14 @@ def logistic(weights, data, targets, hyperparameters):
     y = logistic_predict(weights, data)
 
     #####################################################################
-    # TODO:                                                             #
     # Given weights and data, return the averaged loss over all data    #
     # points, gradient of parameters, and the probabilities given by    #
     # logistic regression.                                              #
     #####################################################################
-    f = None
-    df = None
+    f = evaluate(targets, y)[0]
+    # append a column vector of 1 to data's last column
+    data = np.insert(data, len(data[0]), 1, axis=1)
+    df = np.matmul(data.T, y - targets) / targets.size
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
