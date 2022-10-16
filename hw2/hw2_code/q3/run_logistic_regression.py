@@ -12,17 +12,17 @@ def run_logistic_regression():
     valid_inputs, valid_targets = load_valid()
     test_inputs, test_targets = load_test()
 
-    # N, M = train_inputs.shape
-    N, M = valid_inputs.shape
+    N, M = train_inputs.shape
+
 
     #####################################################################
     # Set the hyperparameters for the learning rate, the number         #
     # of iterations, and the way in which you initialize the weights.   #
     #####################################################################
     hyperparameters = {
-        "learning_rate": 0.01,
+        "learning_rate": 0.1,
         "weight_regularization": 0.,
-        "num_iterations": 1000
+        "num_iterations": 10000
     }
     print(hyperparameters)
     weights = np.zeros(M + 1, dtype=np.float64).reshape(-1, 1)
@@ -39,27 +39,39 @@ def run_logistic_regression():
     # Modify this section to perform gradient descent, create plots,    #
     # and compute test error.                                           #
     #####################################################################
-    # for t in range(hyperparameters["num_iterations"]):
-    #     f, df, y = logistic(weights, train_inputs, train_targets,
-    #                         hyperparameters)
-    #     weights -= hyperparameters["learning_rate"] * df
-    # print(f'Training\nFinal Cross entropy: {evaluate(train_targets, y)[0]} '
-    #       f'\nClassification Accuracy: {evaluate(train_targets, y)[1]}')
-
+    # Training
+    entropy_train = []
+    entropy_valid = []
     for t in range(hyperparameters["num_iterations"]):
-        f, df, y = logistic(weights, valid_inputs, valid_targets,
+        f, df, y = logistic(weights, train_inputs, train_targets,
                             hyperparameters)
+        entropy_train.append(f)
+        f_valid = logistic(weights, valid_inputs, valid_targets, hyperparameters)[0]
+        entropy_valid.append(f_valid)
         weights -= hyperparameters["learning_rate"] * df
-    print(f'Validation\nFinal Cross entropy: {evaluate(valid_targets, y)[0]} '
+    y = logistic(weights, train_inputs, train_targets, hyperparameters)[2]
+    print(f'---Training---\nFinal Cross entropy: {evaluate(train_targets, y)[0]} '
+          f'\nClassification Accuracy: {evaluate(train_targets, y)[1]}')
+
+    # Validation
+    y = logistic(weights, valid_inputs, valid_targets, hyperparameters)[2]
+    print(f'---Validation---\nFinal Cross entropy: {evaluate(valid_targets, y)[0]} '
           f'\nClassification Accuracy: {evaluate(valid_targets, y)[1]}')
 
-    # for t in range(hyperparameters["num_iterations"]):
-    #     f, df, y = logistic(weights, test_inputs, test_targets,
-    #                         hyperparameters)
-    #     weights -= hyperparameters["learning_rate"] * df
-    # print(f'Test\nFinal Cross entropy: {evaluate(test_targets, y)[0]} '
-    #       f'\nClassification Accuracy: {evaluate(test_targets, y)[1]}')
+    # Test
+    y = logistic(weights, test_inputs, test_targets, hyperparameters)[2]
+    print(f'---Test---\nFinal Cross entropy: {evaluate(test_targets, y)[0]} '
+          f'\nClassification Accuracy: {evaluate(test_targets, y)[1]}')
 
+    iterations = np.arange(hyperparameters["num_iterations"])
+    # plt.title("mnist_train")
+    plt.title("mnist_train_small")
+    plt.xlabel("iterations")
+    plt.ylabel("cross entropy")
+    plt.plot(iterations, entropy_train, label="train")
+    plt.plot(iterations, entropy_valid, label="valid")
+    plt.legend()
+    plt.show()
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
