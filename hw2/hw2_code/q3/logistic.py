@@ -48,7 +48,7 @@ def evaluate(targets, y):
     # return cross entropy and the fraction of inputs classified        #
     # correctly.                                                        #
     #####################################################################
-    ce = (-targets * np.log(y) - (1 - targets) * np.log(1 - y)).mean()
+    ce = (-(targets * np.log(y)) - (1 - targets) * np.log(1 - y)).mean()
     x = y.copy()
     for i in range(len(x)):
         if x[i] >= 0.5:

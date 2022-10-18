@@ -7,8 +7,8 @@ import numpy as np
 
 
 def run_logistic_regression():
-    train_inputs, train_targets = load_train()
-    # train_inputs, train_targets = load_train_small()
+    # train_inputs, train_targets = load_train()
+    train_inputs, train_targets = load_train_small()
     valid_inputs, valid_targets = load_valid()
     test_inputs, test_targets = load_test()
 
@@ -22,7 +22,7 @@ def run_logistic_regression():
     hyperparameters = {
         "learning_rate": 0.1,
         "weight_regularization": 0.,
-        "num_iterations": 10000
+        "num_iterations": 200
     }
     print(hyperparameters)
     weights = np.zeros(M + 1, dtype=np.float64).reshape(-1, 1)
