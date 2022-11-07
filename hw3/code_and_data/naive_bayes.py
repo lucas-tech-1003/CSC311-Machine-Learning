@@ -92,15 +92,53 @@ def train_mle_estimator(train_images, train_labels):
     """ Inputs: train_images, train_labels
         Returns the MLE estimators theta_mle and pi_mle"""
 
-    # YOU NEED TO WRITE THIS PART
+    N_images = train_images.shape[0]
+    pixels = train_images.shape[1]
+    classes = train_labels.shape[1]
+    num_each_class = np.sum(train_labels, axis=0)   # sums up columns of classes
+    theta_mle = []
+    for j in range(pixels):
+        col = []
+        for c in range(classes):
+            jth_sum = 0
+            for i in range(N_images):
+                if train_labels[i][c] == 1:
+                    jth_sum += train_images[i][j]
+            col.append(jth_sum / num_each_class[c])
+        theta_mle.append(col)
+    theta_mle = np.array(theta_mle)
+    theta_mle.reshape(pixels, classes)
+
+    pi_mle = num_each_class / N_images
+
     return theta_mle, pi_mle
 
 
 def train_map_estimator(train_images, train_labels):
     """ Inputs: train_images, train_labels
         Returns the MAP estimators theta_map and pi_map"""
-    
-    # YOU NEED TO WRITE THIS PART
+    alpha = 3
+    beta = 3
+    N_images = train_images.shape[0]
+    pixels = train_images.shape[1]
+    classes = train_labels.shape[1]
+    num_each_class = np.sum(train_labels, axis=0)   # sums up columns of classes
+
+    theta_map = []
+    for j in range(pixels):
+        col = []
+        for c in range(classes):
+            jth_sum = 0
+            for i in range(N_images):
+                if train_labels[i][c] == 1:
+                    jth_sum += train_images[i][j]
+            col.append((jth_sum + alpha -1) / (num_each_class[c] + alpha + beta - 2))
+        theta_map.append(col)
+    theta_map = np.array(theta_map)
+    theta_map.reshape(pixels, classes)
+
+    pi_map = (num_each_class + alpha - 1) / (N_images + alpha + beta -2)
+
     return theta_map, pi_map
 
 
@@ -110,8 +148,25 @@ def log_likelihood(images, theta, pi):
     log_like[i,c] = log p (c |x^(i), theta, pi) using the estimators theta and pi.
     log_like is a matrix of num of images x num of classes
     Note that log likelihood is not only for c^(i), it is for all possible c's."""
+    N_images = images.shape[0]
+    classes = pi.shape[0]
+    log_like = []
+    theta_transpose = theta.T
 
-    # YOU NEED TO WRITE THIS PART
+    for i in range(N_images):
+        row = []
+        denominator = 0
+        for c in range(classes):
+            row_col_log_like = np.log(pi[c]) + np.dot(images[i].T, np.log(theta_transpose[c])) + \
+                                    np.dot((1-images[i]).T, np.log(1-theta_transpose[c]))
+            denominator += np.exp(row_col_log_like)
+        for c in range(classes):
+            row_col_log_like = np.log(pi[c]) + np.dot(images[i].T, np.log(theta_transpose[c])) + \
+                               np.dot((1-images[i]).T, np.log(1-theta_transpose[c])) - np.log(denominator)
+            row.append(row_col_log_like)
+        log_like.append(row)
+    log_like = np.array(log_like)
+    log_like.reshape(N_images, classes)
 
     return log_like
 
@@ -119,16 +174,23 @@ def log_likelihood(images, theta, pi):
 def predict(log_like):
     """ Inputs: matrix of log likelihoods
     Returns the predictions based on log likelihood values"""
+    predictions = np.argmax(log_like, axis=1)
 
-    # YOU NEED TO WRITE THIS PART
     return predictions
 
 
 def accuracy(log_like, labels):
     """ Inputs: matrix of log likelihoods and 1-of-K labels
     Returns the accuracy based on predictions from log likelihood values"""
+    predictions = predict(log_like)
+    correct = 0
+    N_images = labels.shape[0]
+    for i in range(N_images):
+        index = predictions[i]
+        if labels[i][index] == 1:
+            correct += 1
+    acc = correct / N_images
 
-    # YOU NEED TO WRITE THIS PART
     return acc
 
 
