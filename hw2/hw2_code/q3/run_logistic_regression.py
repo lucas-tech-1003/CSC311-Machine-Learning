@@ -7,8 +7,8 @@ import numpy as np
 
 
 def run_logistic_regression():
-    # train_inputs, train_targets = load_train()
-    train_inputs, train_targets = load_train_small()
+    train_inputs, train_targets = load_train()
+    # train_inputs, train_targets = load_train_small()
     valid_inputs, valid_targets = load_valid()
     test_inputs, test_targets = load_test()
 
@@ -64,8 +64,8 @@ def run_logistic_regression():
           f'\nClassification Accuracy: {evaluate(test_targets, y)[1]}')
 
     iterations = np.arange(hyperparameters["num_iterations"])
-    # plt.title("mnist_train")
-    plt.title("mnist_train_small")
+    plt.title("mnist_train")
+    # plt.title("mnist_train_small")
     plt.xlabel("iterations")
     plt.ylabel("cross entropy")
     plt.plot(iterations, entropy_train, label="train")
